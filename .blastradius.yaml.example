@@ -1,0 +1,25 @@
+# .blastradius.yaml — BlastRadius configuration
+# Copy to .blastradius.yaml in your repo root
+
+# Tags that identify production resources
+production_tags:
+  - "env:prod"
+  - "env:production"
+  - "environment:prod"
+  - "environment:production"
+
+# Resources that are always treated as critical
+critical_resources:
+  - "aws_db_instance.main"
+  # - "aws_kms_key.master"
+
+# Rules to skip (by rule ID)
+ignore_rules: []
+  # - "iam_role_change"
+
+# Scoring weight multipliers (default 1.0)
+weights:
+  destruction: 1.0
+  security: 1.0
+  network: 1.0
+  stateful: 1.0

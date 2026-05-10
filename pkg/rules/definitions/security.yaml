@@ -1,0 +1,42 @@
+- id: iam_policy_change
+  severity: high
+  category: security
+  description: "IAM policy modified — review permission scope"
+  resource_types: ["aws_iam_policy", "aws_iam_role_policy", "aws_iam_user_policy"]
+  actions: ["create", "update"]
+
+- id: iam_role_change
+  severity: medium
+  category: security
+  description: "IAM role modified"
+  resource_types: ["aws_iam_role"]
+  actions: ["create", "update"]
+
+- id: sg_public_ingress
+  severity: high
+  category: security
+  description: "Security group rule opens access to 0.0.0.0/0"
+  resource_types: ["aws_security_group_rule", "aws_vpc_security_group_ingress_rule"]
+  actions: ["create", "update"]
+  condition: "cidr_blocks contains 0.0.0.0/0"
+
+- id: sg_deletion
+  severity: medium
+  category: security
+  description: "Security group will be deleted — dependent resources may lose access"
+  resource_types: ["aws_security_group"]
+  actions: ["delete"]
+
+- id: kms_key_deletion
+  severity: critical
+  category: security
+  description: "KMS key will be deleted — encrypted data becomes unrecoverable"
+  resource_types: ["aws_kms_key"]
+  actions: ["delete"]
+
+- id: secrets_manager_deletion
+  severity: high
+  category: security
+  description: "Secret will be deleted"
+  resource_types: ["aws_secretsmanager_secret"]
+  actions: ["delete"]

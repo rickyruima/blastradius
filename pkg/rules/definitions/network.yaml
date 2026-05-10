@@ -1,0 +1,41 @@
+- id: vpc_deletion
+  severity: critical
+  category: network
+  description: "VPC will be deleted — all contained resources affected"
+  resource_types: ["aws_vpc"]
+  actions: ["delete"]
+
+- id: subnet_change
+  severity: medium
+  category: network
+  description: "Subnet modified — may affect resource placement"
+  resource_types: ["aws_subnet"]
+  actions: ["delete", "replace", "update"]
+
+- id: route_table_change
+  severity: high
+  category: network
+  description: "Route table modified — may break network connectivity"
+  resource_types: ["aws_route_table", "aws_route"]
+  actions: ["delete", "update", "replace"]
+
+- id: nat_gateway_change
+  severity: high
+  category: network
+  description: "NAT gateway modified — private subnet internet access affected"
+  resource_types: ["aws_nat_gateway"]
+  actions: ["delete", "replace"]
+
+- id: lb_deletion
+  severity: high
+  category: network
+  description: "Load balancer will be deleted — service interruption"
+  resource_types: ["aws_lb", "aws_alb", "aws_elb"]
+  actions: ["delete"]
+
+- id: vpc_peering_change
+  severity: high
+  category: network
+  description: "VPC peering connection modified — cross-VPC communication affected"
+  resource_types: ["aws_vpc_peering_connection"]
+  actions: ["delete", "replace"]

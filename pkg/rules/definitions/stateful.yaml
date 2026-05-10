@@ -1,0 +1,34 @@
+- id: dynamodb_table_deletion
+  severity: critical
+  category: stateful
+  description: "DynamoDB table will be deleted — all data lost"
+  resource_types: ["aws_dynamodb_table"]
+  actions: ["delete"]
+
+- id: ebs_volume_deletion
+  severity: high
+  category: stateful
+  description: "EBS volume will be deleted — data loss"
+  resource_types: ["aws_ebs_volume"]
+  actions: ["delete"]
+
+- id: efs_deletion
+  severity: high
+  category: stateful
+  description: "EFS file system will be deleted — shared data lost"
+  resource_types: ["aws_efs_file_system"]
+  actions: ["delete"]
+
+- id: sqs_queue_deletion
+  severity: medium
+  category: stateful
+  description: "SQS queue will be deleted — queued messages lost"
+  resource_types: ["aws_sqs_queue"]
+  actions: ["delete"]
+
+- id: sns_topic_deletion
+  severity: medium
+  category: stateful
+  description: "SNS topic will be deleted — subscribers disconnected"
+  resource_types: ["aws_sns_topic"]
+  actions: ["delete"]

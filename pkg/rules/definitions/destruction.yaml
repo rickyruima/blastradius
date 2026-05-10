@@ -1,0 +1,48 @@
+- id: rds_replacement
+  severity: critical
+  category: destruction
+  description: "Database instance will be REPLACED — causes downtime and potential data loss"
+  resource_types: ["aws_db_instance", "aws_rds_cluster"]
+  actions: ["delete", "replace"]
+
+- id: rds_deletion
+  severity: critical
+  category: destruction
+  description: "Database instance will be DELETED"
+  resource_types: ["aws_db_instance", "aws_rds_cluster"]
+  actions: ["delete"]
+
+- id: s3_bucket_deletion
+  severity: high
+  category: destruction
+  description: "S3 bucket will be deleted — all objects lost"
+  resource_types: ["aws_s3_bucket"]
+  actions: ["delete"]
+
+- id: eks_cluster_deletion
+  severity: critical
+  category: destruction
+  description: "EKS cluster will be deleted — all workloads lost"
+  resource_types: ["aws_eks_cluster"]
+  actions: ["delete", "replace"]
+
+- id: ecs_service_deletion
+  severity: high
+  category: destruction
+  description: "ECS service will be deleted — service interruption"
+  resource_types: ["aws_ecs_service"]
+  actions: ["delete"]
+
+- id: elasticache_deletion
+  severity: high
+  category: destruction
+  description: "ElastiCache cluster will be deleted — cache data lost"
+  resource_types: ["aws_elasticache_cluster", "aws_elasticache_replication_group"]
+  actions: ["delete", "replace"]
+
+- id: lambda_deletion
+  severity: medium
+  category: destruction
+  description: "Lambda function will be deleted"
+  resource_types: ["aws_lambda_function"]
+  actions: ["delete"]
