@@ -1,0 +1,101 @@
+name: 'BlastRadius - Terraform Risk Analyzer'
+description: 'Analyze terraform plan for destruction risk. Fails the workflow if risk score exceeds threshold.'
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  plan-file:
+    description: 'Path to terraform show -json output'
+    required: true
+  threshold:
+    description: 'Minimum risk level to fail: low, medium, high, critical'
+    required: false
+    default: 'high'
+  comment:
+    description: 'Post results as PR comment (true/false)'
+    required: false
+    default: 'true'
+  github-token:
+    description: 'GitHub token for PR comments'
+    required: false
+    default: ${{ github.token }}
+  version:
+    description: 'BlastRadius version to install (default: latest)'
+    required: false
+    default: 'latest'
+
+outputs:
+  level:
+    description: 'Risk level (LOW, MEDIUM, HIGH, CRITICAL)'
+    value: ${{ steps.scan.outputs.level }}
+  score:
+    description: 'Risk score (0-10)'
+    value: ${{ steps.scan.outputs.score }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache: false
+
+    - name: Install BlastRadius
+      shell: bash
+      run: |
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          GOBIN="${{ runner.temp }}/bin" go install github.com/rickyruima/blastradius/cmd/blastradius@latest
+        else
+          GOBIN="${{ runner.temp }}/bin" go install github.com/rickyruima/blastradius/cmd/blastradius@${{ inputs.version }}
+        fi
+        echo "${{ runner.temp }}/bin" >> $GITHUB_PATH
+
+    - name: Run scan
+      id: scan
+      shell: bash
+      run: |
+        set +e
+        OUTPUT=$(blastradius scan "${{ inputs.plan-file }}" -f json -t "${{ inputs.threshold }}" 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        # Extract level and score from JSON
+        LEVEL=$(echo "$OUTPUT" | jq -r '.level // "UNKNOWN"')
+        SCORE=$(echo "$OUTPUT" | jq -r '.overall // 0')
+
+        echo "level=$LEVEL" >> $GITHUB_OUTPUT
+        echo "score=$SCORE" >> $GITHUB_OUTPUT
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+        # Save markdown report for comment
+        blastradius scan "${{ inputs.plan-file }}" -f markdown > "${{ runner.temp }}/report.md" 2>/dev/null || true
+
+    - name: Comment on PR
+      if: inputs.comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        REPORT=$(cat "${{ runner.temp }}/report.md")
+        COMMENT="<!-- blastradius-report -->
+        ${REPORT}"
+
+        # Find existing comment
+        EXISTING=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+          --jq '.[] | select(.body | contains("<!-- blastradius-report -->")) | .id' | head -1)
+
+        if [ -n "$EXISTING" ]; then
+          gh api repos/${{ github.repository }}/issues/comments/$EXISTING \
+            -X PATCH -f body="$COMMENT"
+        else
+          gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT"
+        fi
+
+    - name: Enforce threshold
+      if: steps.scan.outputs.exit_code == '2'
+      shell: bash
+      run: |
+        echo "::error::BlastRadius: Risk level ${{ steps.scan.outputs.level }} (${{ steps.scan.outputs.score }}/10) exceeds threshold '${{ inputs.threshold }}'"
+        exit 1
